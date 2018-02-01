@@ -1,0 +1,27 @@
+{
+  "name": "hls-service",
+  "version": "1.0.0",
+  "description": "simple hls service for audio streaming",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Einstrasse/hls-service.git"
+  },
+  "keywords": [
+    "hls",
+    "service"
+  ],
+  "author": "Einstrasse",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Einstrasse/hls-service/issues"
+  },
+  "homepage": "https://github.com/Einstrasse/hls-service#readme",
+  "dependencies": {
+    "hls-server": "^1.4.0"
+  }
+}
