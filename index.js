@@ -4,6 +4,7 @@ const fs = require('fs')
 const url = require('url')
 
 const audioPath = __dirname + "/audio/";
+const viewPath = __dirname + "/view/";
 
 let PORT = 8000;
 let SERVER_ADDR = "127.0.0.1"
@@ -14,19 +15,21 @@ var server = http.createServer(function(req, res) {
 		res.writeHead(200, {
 			'Content-Type': 'text/html'
 		});
-		var html = [
-			'<!doctype html>',
-			'<html>',
-				'<head>',
-					'<title> Einstrasse HLS Audio Live Streaming Player </title>',
-				'</head>',
-				'<body>',
-					'<video src="http://', SERVER_ADDR + ':' + PORT + '/manifest.m3u8" controls autoplay>',
-				'</body>',
-			'</html>'
-		].join('');
-		res.write(html);
-		res.end();
+		var stream = fs.createReadStream(viewPath + "index.html");
+		stream.pipe(res);
+		// var html = [
+		// 	'<!doctype html>',
+		// 	'<html>',
+		// 		'<head>',
+		// 			'<title> Einstrasse HLS Audio Live Streaming Player </title>',
+		// 		'</head>',
+		// 		'<body>',
+		// 			'<video src="http://', SERVER_ADDR + ':' + PORT + '/manifest.m3u8" controls autoplay>',
+		// 		'</body>',
+		// 	'</html>'
+		// ].join('');
+		// res.write(html);
+		// res.end();
 		return;
 	} else if (ext == 'm3u8') {
 		return fs.readFile(audioPath + 'manifest.m3u8', function(err, contents) {

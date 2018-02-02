@@ -1,0 +1,35 @@
+<!doctype html>
+
+<html>
+  <head><title> Title </title></head>
+  <body>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <div id="display"></div>
+    <video id="video"></video>
+    <script>
+      if(Hls.isSupported()) {
+        document.getElementById('display').innerHTML = 'HLS is Supported for this browser!!';
+
+        var video = document.getElementById('video');
+        var hls = new Hls();
+        hls.loadSource('http://localhost:8000/manifest.m3u8');
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED,function() {
+          video.play();
+      });
+     }
+     // hls.js is not supported on platforms that do not have Media Source Extensions (MSE) enabled.
+     // When the browser has built-in HLS support (check using `canPlayType`), we can provide an HLS manifest (i.e. .m3u8 URL) directly to the video element throught the `src` property.
+     // This is using the built-in support of the plain video element, without using hls.js.
+      else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        document.getElementById('display').innerHTML = 'HLS is NOT Supported for this browser!!<br />I will play this video';
+        video.src = 'http://localhost:8000/manifest.m3u8';
+        video.addEventListener('canplay',function() {
+          video.play();
+        });
+      } else {
+        document.getElementById('display').innerHTML = 'HLS is not available T.T';
+      }
+    </script>
+  </body>
+</html>
