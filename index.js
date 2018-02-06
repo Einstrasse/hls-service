@@ -3,6 +3,9 @@ const http = require('http')
 const fs = require('fs')
 const url = require('url')
 const path = require('path')
+const Busboy = require('busboy')
+const is = require('type-is')
+const os = require('os')
 
 const audioPath = __dirname + "/audio/";
 const viewPath = __dirname + "/view/";
@@ -36,6 +39,54 @@ var server = http.createServer(function(req, res) {
 		var stream = fs.createReadStream(viewPath + "capture_audio.html");
 		stream.pipe(res);
 		return;
+	} else if (uri == '/upload') {
+		console.log(uri);
+		if (!is(req, ['multipart'])) {
+			res.writeHead(404, {
+				'Content-Type': 'text/html'
+			})
+			return res.end();
+		}
+		var busboy
+
+		try {
+			busboy = new Busboy({
+				headers: req.headers
+			});
+		} catch (err) {
+			console.error('header parsing error', err);
+			res.writeHead(500);
+			return res.end();
+		}
+
+		busboy.on('field', function(fieldName, value, fieldnameTruncated, valueTruncaed) {
+		})
+
+		busboy.on('file', function(fieldName, fileStream, fileName, encoding, mimeType) {
+			var saveTo = path.join(os.tmpdir(), path.basename(fieldName));
+			console.log('saveTo:', saveTo);
+			fileStream.pipe(fs.createWriteStream(saveTo));
+		})
+		// busboy.on('error', function(err) {
+		// 	console.error(err);
+		// })
+		// busboy.on('partsLimit', function() {
+		// 	console.log('partsLimit')
+		// })
+		// busboy.on('filesLimit', function() {
+		// 	console.log('filesLimit')
+		// })
+		// busboy.on('fieldsLimit', function() {
+		// 	console.log('fieldsLimit')
+		// })
+		busboy.on('finish', function() {
+			console.log('finish')
+			res.writeHead(201, {
+				'Content-Type': 'text/html'
+			});
+			res.end();
+		})
+		req.pipe(busboy);
 	}
 })
 var hls = new HLSServer(server, { // hls를 위한 미들웨어가 삽입됨. hls 서버 역할을 함

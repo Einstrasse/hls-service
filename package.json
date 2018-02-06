@@ -22,6 +22,8 @@
   },
   "homepage": "https://github.com/Einstrasse/hls-service#readme",
   "dependencies": {
-    "hls-server": "^1.4.0"
+    "busboy": "^0.2.14",
+    "hls-server": "^1.4.0",
+    "type-is": "^1.6.15"
   }
 }

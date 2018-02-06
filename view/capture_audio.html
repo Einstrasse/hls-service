@@ -57,8 +57,22 @@
 		    mediaRecorder.addEventListener('stop', function() {
 		    	console.log('media recorder stopped!');
 		    	console.log('length of recorded Chunks', recordedChunks.length);
-		      downloadLink.href = URL.createObjectURL(new Blob(recordedChunks));
-		      downloadLink.download = 'acetest.wav';
+		    	var blobData = new Blob(recordedChunks);
+		    	var formData = new FormData();
+		    	var url = 'http://localhost:8000/upload';
+		    	formData.append('wavData', blobData);
+		    	var xhr = new XMLHttpRequest();
+		    	xhr.open("POST", url, true);
+		    	xhr.enctype = "multipart/form-data";
+		    	xhr.onreadystatechange = function(e) {
+		    		if (xhr.readyState == 4) {
+		    			console.log("HTTP Response code", xhr.status);
+		    			console.log("HTTP Response text", xhr.responseText);
+		    		}
+		    	}
+		    	xhr.send(formData);
+		      // downloadLink.href = URL.createObjectURL(new Blob(recordedChunks));
+		      // downloadLink.download = 'acetest.wav';
 		    });
 
 		    mediaRecorder.start(timeSlice);
