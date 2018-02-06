@@ -7,79 +7,70 @@
 	<body>
 		<h2> Let's capture the audio from microphone in your device without additional client program </h2>
 
-		<a id="download">Download</a>
-		<button id="stop">Stop</button>
+		<button id="stop">Stop</button><br />
+		<hr>
+		 <button id="send">Send</button>
 		<script> 
-		  let shouldStop = false;
-		  let stopped = false;
-		  const downloadLink = document.getElementById('download');
-		  const stopButton = document.getElementById('stop');
-		  const timeSlice = 1000;
-		  stopButton.addEventListener('click', function() {
-		  	console.log('stop btn clicked');
-		    shouldStop = true;
-		  })
-		  var mediaRecorder;
-		  var handleSuccess = function(stream) {  
-		    const options = {mimeType: 'video/webm;codecs=vp9'};
-		    const recordedChunks = [];
-		    // const mediaRecorder = new MediaRecorder(stream, options);
-		    mediaRecorder = new MediaRecorder(stream, options);
-		    if (typeof mediaRecorder.isTypeSupported != 'undefined') {
-		    	console.log('isTypeSupported() =', mediaRecorder.isTypeSupported());  
-		    }
-		    console.log('handleSuccess fn called', stream);
-		    mediaRecorder.ondataavailable = function(e) {
-		    	console.log('dataavailable!', recordedChunks.length);
-		      if (e.data.size > 0) {
-		        recordedChunks.push(e.data);
-		      }
+		let shouldStop = false;
+		let stopped = false;
+		const stopButton = document.getElementById('stop');
+		const sendButton = document.getElementById('send');
+		const timeSlice = 3000;
 
-		      if(shouldStop === true && mediaRecorder.state === 'recording') {
-		      	console.log('media recorder will stop soon');
-		        mediaRecorder.stop();
-		      }
-		    };
+		var sendToServer = function(data, callback) {
+			var blobData = new Blob([data]);
+			var formData = new FormData();
+			var url = 'http://localhost:8000/upload';
+			formData.append('wavData', blobData);
+			var xhr = new XMLHttpRequest();
+			xhr.open("POST", url, true);
+			xhr.enctype = "multipart/form-data";
+			xhr.onreadystatechange = function(e) {
+				if (xhr.readyState == 4) {
+					blobData = null;
+					formData = null;
+					callback();
+				}
+			}
+			xhr.send(formData);
 
-		    mediaRecorder.onerror = function(e) {
-		    	console.log('error occured on recorder', e);
-		    }
-		    mediaRecorder.onresume = function() {
-		    	console.log('onresume');
-		    }
-		    mediaRecorder.onstart = function() {
-		    	console.log('onstart');
-		    }
-		    mediaRecorder.onstop = function() {
-		    	console.log('onstop');
-		    }
+		}
+		var handleSuccess = function(stream) {  
+			const options = {mimeType: 'video/webm;codecs=vp9'};
+			var mediaRecorder = new MediaRecorder(stream, options);
 
-		    mediaRecorder.addEventListener('stop', function() {
-		    	console.log('media recorder stopped!');
-		    	console.log('length of recorded Chunks', recordedChunks.length);
-		    	var blobData = new Blob(recordedChunks);
-		    	var formData = new FormData();
-		    	var url = 'http://localhost:8000/upload';
-		    	formData.append('wavData', blobData);
-		    	var xhr = new XMLHttpRequest();
-		    	xhr.open("POST", url, true);
-		    	xhr.enctype = "multipart/form-data";
-		    	xhr.onreadystatechange = function(e) {
-		    		if (xhr.readyState == 4) {
-		    			console.log("HTTP Response code", xhr.status);
-		    			console.log("HTTP Response text", xhr.responseText);
-		    		}
-		    	}
-		    	xhr.send(formData);
-		      // downloadLink.href = URL.createObjectURL(new Blob(recordedChunks));
-		      // downloadLink.download = 'acetest.wav';
-		    });
+			mediaRecorder.ondataavailable = function(e) {
+				console.log('dataavailable!');
 
-		    mediaRecorder.start(timeSlice);
-		  };
+				if (mediaRecorder.state == 'recording') {
+					mediaRecorder.stop();
+					if (e.data.size > 0) {
+						sendToServer(e.data, function() {
+							console.log('Upload request!');
+						})
+					}
+				}
+			};
 
-		  navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-		      .then(handleSuccess);
+			mediaRecorder.onerror = function(e) {
+				console.log('error occured on recorder', e);
+			}
+			mediaRecorder.onresume = function() {
+				console.log('onresume');
+			}
+			mediaRecorder.onstart = function() {
+				console.log('onstart');
+			}
+			mediaRecorder.onstop = function() {
+				console.log('onstop');
+				mediaRecorder.start(timeSlice);
+			}
+
+			mediaRecorder.start(timeSlice);
+		};
+
+		navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+		.then(handleSuccess);
 
 		</script>
 	</body>

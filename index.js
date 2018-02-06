@@ -13,6 +13,8 @@ const viewPath = __dirname + "/view/";
 
 let PORT = process.env.PORT || 8000;
 let SERVER_ADDR = "127.0.0.1"
+
+var number = 0;
 var server = http.createServer(function(req, res) {
 	var uri = url.parse(req.url).pathname;
 	var ext = uri.split('.').pop();
@@ -65,7 +67,10 @@ var server = http.createServer(function(req, res) {
 		// })
 
 		busboy.on('file', function(fieldName, fileStream, fileName, encoding, mimeType) {
-			tmpAudioFilePath = path.join(os.tmpdir(), path.basename(fieldName));
+			// var randString = Math.random().toString().substr(14);
+			var randString = number;
+			number++;
+			tmpAudioFilePath = path.join(os.tmpdir(), path.basename(fieldName + '_' + randString + '.wav'));
 			console.log('saveTo:', tmpAudioFilePath);
 			// console.log('encoding:', encoding);
 			// console.log('mimeType:', mimeType);
@@ -77,13 +82,15 @@ var server = http.createServer(function(req, res) {
 			ffmpeg(tmpAudioFilePath, { timeout: 432000 }).addOptions([
 				'-profile:v baseline', // baseline profile (level 3.0) for H264 video codec
 				'-level 3.0', 
-				'-start_number 0',     // start the first .ts segment at index 0
+				// '-start_number 0',     // start the first .ts segment at index 0
+				// '+live',
 				'-hls_time 1',        // 10 second segment duration
 				'-hls_list_size 0',    // Maxmimum number of playlist entries (0 means all entries/infinite)
 				'-f hls'               // HLS format
 			]).output(audioPath + 'manifest.m3u8')
 			.on('end', function() {
 				console.log('ffmpeg tranform succesfully finished');
+				// fs.unlink(tmpAudioFilePath)
 				res.writeHead(201, {
 					'Content-Type': 'text/html'
 				});
@@ -96,21 +103,6 @@ var server = http.createServer(function(req, res) {
 			})
 			.run()
 
-			// var proc = ffmpeg(tmpAudioFilePath, { timeout: 432000 })
-			// .addOption('-hls_time', 1)
-			// .addOption('-hls_list_size', 0)
-			// .addOption('-f hls')
-			// .output(audioPath + '123manifest.m3u8')
-			// .on('end', function() {
-			// 	console.log('ffmpeg tranform succesfully finished');
-			// 	res.writeHead(201, {
-			// 		'Content-Type': 'text/html'
-			// 	});
-			// 	res.end();
-			// })
-			// .on('error', function(err) {
-			// 	console.log('an error occured:', err);
-			// })
 			
 		})
 		req.pipe(busboy);
