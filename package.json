@@ -23,6 +23,7 @@
   "homepage": "https://github.com/Einstrasse/hls-service#readme",
   "dependencies": {
     "busboy": "^0.2.14",
+    "fluent-ffmpeg": "^2.1.2",
     "hls-server": "^1.4.0",
     "type-is": "^1.6.15"
   }

@@ -6,6 +6,7 @@ const path = require('path')
 const Busboy = require('busboy')
 const is = require('type-is')
 const os = require('os')
+const ffmpeg = require('fluent-ffmpeg')
 
 const audioPath = __dirname + "/audio/";
 const viewPath = __dirname + "/view/";
@@ -48,6 +49,7 @@ var server = http.createServer(function(req, res) {
 			return res.end();
 		}
 		var busboy
+		var tmpAudioFilePath
 
 		try {
 			busboy = new Busboy({
@@ -59,32 +61,57 @@ var server = http.createServer(function(req, res) {
 			return res.end();
 		}
 
-		busboy.on('field', function(fieldName, value, fieldnameTruncated, valueTruncaed) {
-		})
+		// busboy.on('field', function(fieldName, value, fieldnameTruncated, valueTruncaed) {
+		// })
 
 		busboy.on('file', function(fieldName, fileStream, fileName, encoding, mimeType) {
-			var saveTo = path.join(os.tmpdir(), path.basename(fieldName));
-			console.log('saveTo:', saveTo);
-			fileStream.pipe(fs.createWriteStream(saveTo));
+			tmpAudioFilePath = path.join(os.tmpdir(), path.basename(fieldName));
+			console.log('saveTo:', tmpAudioFilePath);
+			// console.log('encoding:', encoding);
+			// console.log('mimeType:', mimeType);
+			fileStream.pipe(fs.createWriteStream(tmpAudioFilePath));
 		})
-		// busboy.on('error', function(err) {
-		// 	console.error(err);
-		// })
-		// busboy.on('partsLimit', function() {
-		// 	console.log('partsLimit')
-		// })
-		// busboy.on('filesLimit', function() {
-		// 	console.log('filesLimit')
-		// })
-		// busboy.on('fieldsLimit', function() {
-		// 	console.log('fieldsLimit')
-		// })
+
 		busboy.on('finish', function() {
-			console.log('finish')
-			res.writeHead(201, {
-				'Content-Type': 'text/html'
-			});
-			res.end();
+			console.log('ffmpeg encoding')
+			ffmpeg(tmpAudioFilePath, { timeout: 432000 }).addOptions([
+				'-profile:v baseline', // baseline profile (level 3.0) for H264 video codec
+				'-level 3.0', 
+				'-start_number 0',     // start the first .ts segment at index 0
+				'-hls_time 1',        // 10 second segment duration
+				'-hls_list_size 0',    // Maxmimum number of playlist entries (0 means all entries/infinite)
+				'-f hls'               // HLS format
+			]).output(audioPath + 'manifest.m3u8')
+			.on('end', function() {
+				console.log('ffmpeg tranform succesfully finished');
+				res.writeHead(201, {
+					'Content-Type': 'text/html'
+				});
+				res.end();
+			})
+			.on('error', function(err) {
+				console.error('Error while ffmpeg processing:', err)
+				res.writeHead(500);
+				res.end();
+			})
+			.run()
+
+			// var proc = ffmpeg(tmpAudioFilePath, { timeout: 432000 })
+			// .addOption('-hls_time', 1)
+			// .addOption('-hls_list_size', 0)
+			// .addOption('-f hls')
+			// .output(audioPath + '123manifest.m3u8')
+			// .on('end', function() {
+			// 	console.log('ffmpeg tranform succesfully finished');
+			// 	res.writeHead(201, {
+			// 		'Content-Type': 'text/html'
+			// 	});
+			// 	res.end();
+			// })
+			// .on('error', function(err) {
+			// 	console.log('an error occured:', err);
+			// })
+			
 		})
 		req.pipe(busboy);
 	}
