@@ -15,12 +15,12 @@
 		let stopped = false;
 		const stopButton = document.getElementById('stop');
 		const sendButton = document.getElementById('send');
-		const timeSlice = 3000;
+		const timeSlice = 120000;
 
 		var sendToServer = function(data, callback) {
 			var blobData = new Blob([data]);
 			var formData = new FormData();
-			var url = 'http://localhost:8000/upload';
+			var url = '/upload';
 			formData.append('wavData', blobData);
 			var xhr = new XMLHttpRequest();
 			xhr.open("POST", url, true);
