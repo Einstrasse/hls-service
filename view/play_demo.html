@@ -15,7 +15,7 @@
 
         var video = document.getElementById('video');
         var hls = new Hls();
-        hls.loadSource('http://localhost:8000/manifest.m3u8');
+        hls.loadSource('/playlist.m3u8');
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED,function() {
           video.play();
@@ -26,7 +26,7 @@
      // This is using the built-in support of the plain video element, without using hls.js.
       else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         document.getElementById('display').innerHTML = 'HLS is NOT Supported for this browser!!<br />I will play this video';
-        video.src = 'http://localhost:8000/manifest.m3u8';
+        video.src = '/playlist.m3u8';
         video.addEventListener('canplay',function() {
           video.play();
         });
